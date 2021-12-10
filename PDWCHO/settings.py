@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from decouple import config
 
@@ -26,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = [config('ALLOWED_HOSTS')]
+ALLOWED_HOSTS = [urlparse(config('ALLOWED_HOSTS')).hostname]
 
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/dashboard'
