@@ -1,0 +1,43 @@
+{% extends 'base_template.html' %}
+{% block content %}
+    <h3 class="mb-0">{{ user.name }}</h3>
+    <h4 class="mb-0">Rated books</h4>
+    <div class="list-group">
+        {% for book in user.books %}
+            <div class="list-group-item list-group-item-action col-md-3">
+                <a href="/book?isbn={{ book.isbn }}">
+                    <h6 class="mb-0">{{ book.title }}</h6>
+                </a>
+                <div class="d-flex justify-content-center small text-warning mb-2">
+                    <script>
+						drawStars({{ book.rating }});
+                    </script>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <h4 class="mb-0">Follows</h4>
+    <div class="list-group">
+        {% if user.users.0.id %}
+            {% for user in user.users %}
+                <div class="list-group-item list-group-item-action col-md-3">
+                    <a href="/user?id={{ user.id }}">
+                        <h6 class="mb-0">{{ user.name }}</h6>
+                    </a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="list-group-item list-group-item-action col-md-3">
+                <h6 class="mb-0">-</h6>
+            </div>
+        {% endif %}
+    </div>
+    {% if can_follow == 'not followed' %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Follow</button>
+        </form>
+    {% elif can_follow == 'followed' %}
+        <a class="btn btn-primary" href="#" role="button">Already followed</a>
+    {% endif %}
+{% endblock %}

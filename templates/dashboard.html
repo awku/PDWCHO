@@ -1,0 +1,57 @@
+{% extends 'base_template.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <h3 class="mb-0">Recommend me a...</h3>
+    <input type="radio" class="btn-check" name="choice" id="book"
+           onclick="document.getElementById('book_choices').style.display= 'block';document.getElementById('user_choices').style.display= 'none';">
+    <label class="btn btn-primary my-1 btn-sm " for="book">book to read</label>
+    <input type="radio" class="btn-check" name="choice" id="user"
+           onclick="document.getElementById('user_choices').style.display= 'block';document.getElementById('book_choices').style.display= 'none';">
+    <label class="btn btn-primary my-1 btn-sm " for="user">user to follow</label>
+
+    <div id="user_choices" style="display: none">
+        <div class="d-flex justify-content-center small">
+            <form id="user_form" method="post">
+                {% csrf_token %}
+                {{ user_form|crispy }}
+                <button type="submit" class="btn btn-secondary btn-sm" style="margin-top: -15px; padding-top: -15px">
+                    Find
+                </button>
+            </form>
+        </div>
+    </div>
+    <div id="book_choices" style="display: none">
+        <div class="d-flex justify-content-center small">
+            <form id="book_form" method="post">
+                {% csrf_token %}
+                {{ book_form|crispy }}
+                <button type="submit" class="btn btn-secondary btn-sm" style="margin-top: -15px; padding-top: -15px">
+                    Find
+                </button>
+            </form>
+        </div>
+    </div>
+    {% if books_data %}
+        <div class="list-group">
+            {% for books in books_data %}
+                {% for book in books %}
+                    <div class="list-group-item list-group-item-action col-md-3">
+                        <a href="/book?isbn={{ book.isbn }}">
+                            <h6 class="mb-0">{{ book.title }}</h6>
+                        </a>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    {% elif users_data %}
+        <div class="list-group">
+            {% for user in users_data %}
+                <div class="list-group-item list-group-item-action col-md-3">
+                    <a href="/user?id={{ user.id }}">
+                        <h6 class="mb-0">{{ user.name }}</h6>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

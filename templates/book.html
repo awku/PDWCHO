@@ -1,0 +1,67 @@
+{% extends 'base_template.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="card mb-3">
+        <div class="row g-0">
+            <div class="col-md-4 mx-auto">
+                <img src="{{ book.image }}" class="img-fluid rounded-start" alt="...">
+                <div class="gap-2 text-warning mb-2 mx-auto">
+                    <p class="card-text">Average:
+                        <script>
+							drawStars({{ book.average }});
+                        </script>
+                    </p>
+                    {% if is_rated %}
+                        <p class="card-text">My rating:
+                            <script>
+								drawStars({{ is_rated.0.rating }});
+                            </script>
+                        </p>
+                    {% endif %}
+                </div>
+                {% if is_rated %}
+                    <button type="button" class="btn btn-primary"
+                            onClick="document.getElementById('tag_form').style.display= 'block'">Add tag
+                    </button>
+                    <div id="tag_form" style="display: none">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ tag_form|crispy }}
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <button type="button" class="btn btn-primary"
+                            onClick="document.getElementById('rate_form').style.display= 'block'">Rate
+                    </button>
+                    <div id="rate_form" style="display: none">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ rate_form|crispy }}
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"> authors:
+                        {% for author in book.authors %}
+                            <a href="/author?id={{ author.id }}">{{ author.name }}</a>
+                        {% endfor %}
+                    </p>
+                    <p class="card-text"> year:
+                        {{ book.year }}
+                    </p>
+                    <div class="card-text">
+                        Tags:
+                        {% for tag in book.tags %}
+                            <a href="/tag?id={{ tag.id }}">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
