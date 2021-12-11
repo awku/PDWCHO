@@ -220,8 +220,8 @@ def create_admin_view(request):
             email = form.cleaned_data.get("email")
             if not app.find_user(email):
                 password = make_password(form.cleaned_data.get("password"))
-                app.create_user(email, password, admin=True)
-                return redirect('login_url')
+                app.create_user(user_name=None, user_email=email, user_password=password, admin=True)
+                return redirect('home')
     else:
         form = CreateAdminForm()
     return render(request, 'create_admin.html', {'form': form})
