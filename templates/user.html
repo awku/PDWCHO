@@ -7,8 +7,8 @@
     {% endif %}
     <h4 class="mb-0">Rated books</h4>
     <div class="list-group">
-        {% if user.books %}
-            {% for book in user.books.0.isbn %}
+        {% if user.books.0.isbn %}
+            {% for book in user.books %}
                 <div class="list-group-item list-group-item-action col-md-3">
                     <a href="/book?isbn={{ book.isbn }}">
                         <h6 class="mb-0">{{ book.title }}</h6>
