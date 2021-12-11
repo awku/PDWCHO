@@ -1,20 +1,30 @@
 {% extends 'base_template.html' %}
 {% block content %}
-    <h3 class="mb-0">{{ user.name }}</h3>
+    {% if can_follow == 'no' and not user.name %}
+        <h3 class="mb-0">Admin</h3>
+    {% else %}
+        <h3 class="mb-0">{{ user.name }}</h3>
+    {% endif %}
     <h4 class="mb-0">Rated books</h4>
     <div class="list-group">
-        {% for book in user.books %}
-            <div class="list-group-item list-group-item-action col-md-3">
-                <a href="/book?isbn={{ book.isbn }}">
-                    <h6 class="mb-0">{{ book.title }}</h6>
-                </a>
-                <div class="d-flex justify-content-center small text-warning mb-2">
-                    <script>
-						drawStars({{ book.rating }});
-                    </script>
+        {% if user.books %}
+            {% for book in user.books %}
+                <div class="list-group-item list-group-item-action col-md-3">
+                    <a href="/book?isbn={{ book.isbn }}">
+                        <h6 class="mb-0">{{ book.title }}</h6>
+                    </a>
+                    <div class="d-flex justify-content-center small text-warning mb-2">
+                        <script>
+							drawStars({{ book.rating }});
+                        </script>
+                    </div>
                 </div>
+            {% endfor %}
+        {% else %}
+            <div class="list-group-item list-group-item-action col-md-3">
+                <h6 class="mb-0">-</h6>
             </div>
-        {% endfor %}
+        {% endif %}
     </div>
     <h4 class="mb-0">Follows</h4>
     <div class="list-group">
