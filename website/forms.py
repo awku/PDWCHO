@@ -28,8 +28,8 @@ class CreateAdminForm(forms.Form):
 class CreateBookForm(forms.Form):
     title = CharField(label='Title', max_length=100)
     isbn = CharField(label='ISBN', max_length=100)
-    year = IntegerField(label='ISBN')
-    image = CharField(label='Image', max_length=400)
+    year = IntegerField(label='Year')
+    image = CharField(label='Cover Image', max_length=400)
     authors = CharField(label='Authors', max_length=400,
                         help_text="For more than 1 author, please separate each with a comma (,)")
 
