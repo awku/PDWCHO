@@ -5,7 +5,8 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 
 from .db import App
-from .forms import SignUpForm, LoginForm, RateBookForm, TagBookForm, RecommendUsersForm, RecommendBooksForm
+from .forms import SignUpForm, LoginForm, RateBookForm, TagBookForm, RecommendUsersForm, RecommendBooksForm, \
+    CreateAdminForm, CreateBookForm
 
 app = App()
 
@@ -14,6 +15,17 @@ def logged_in(function):
     @wraps(function)
     def wrap(request, *args, **kwargs):
         if request.session.exists(request.session.session_key) and 'user_id' in request.session:
+            return function(request, *args, **kwargs)
+        return redirect('login_url')
+
+    return wrap
+
+
+def logged_admin(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+        if request.session.exists(
+                request.session.session_key) and 'user_id' in request.session and 'admin' in request.session:
             return function(request, *args, **kwargs)
         return redirect('login_url')
 
@@ -93,6 +105,8 @@ def login_view(request):
                     request.session.create()
                 user_id = app.find_login_info(email)[0]['id']
                 request.session["user_id"] = user_id
+                if app.find_login_info(email)[0]['admin']:
+                    request.session["admin"] = True
                 return redirect('dashboard')
     else:
         form = LoginForm()
@@ -102,6 +116,7 @@ def login_view(request):
 def logout_view(request):
     if request.session.exists(request.session.session_key) and request.session["user_id"]:
         request.session.pop("user_id")
+        request.session.pop("admin")
     return redirect('/books')
 
 
@@ -195,3 +210,36 @@ def authors_view(request):
         paginator = Paginator(authors_data, 10)
         authors = paginator.page(page)
         return render(request, 'authors.html', {'authors': authors})
+
+
+@logged_admin
+def create_admin_view(request):
+    if request.method == "POST":
+        form = CreateAdminForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get("email")
+            if not app.find_user(email):
+                password = make_password(form.cleaned_data.get("password"))
+                app.create_user(email, password, admin=True)
+                return redirect('login_url')
+    else:
+        form = CreateAdminForm()
+    return render(request, 'create_admin.html', {'form': form})
+
+
+@logged_admin
+def create_book_view(request):
+    if request.method == "POST":
+        form = CreateBookForm(request.POST)
+        if form.is_valid():
+            isbn = form.cleaned_data.get("isbn")
+            if not app.find_book(isbn):
+                title = form.cleaned_data.get("title")
+                year = form.cleaned_data.get("year")
+                image = form.cleaned_data.get("image")
+                authors = form.cleaned_data.get("authors")
+                app.create_book_with_authors(isbn, year, title, image, authors)
+                return redirect('books')
+    else:
+        form = CreateAdminForm()
+    return render(request, 'create_book.html', {'form': form})

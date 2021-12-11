@@ -47,6 +47,10 @@
                 {% endif %}
                 <li><a href="/authors" class="nav-link px-2 link-dark">Authors</a></li>
                 <li><a href="/tags" class="nav-link px-2 link-dark">Tags</a></li>
+                {% if request.session.admin %}
+                    <li><a href="/create_admin" class="nav-link px-2 link-dark">Create admin account</a></li>
+                    <li><a href="/create_book" class="nav-link px-2 link-dark">Add book</a></li>
+                {% endif %}
             </ul>
             {% if request.session.user_id %}
                 <div class="dropdown text-end">

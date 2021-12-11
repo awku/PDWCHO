@@ -14,8 +14,8 @@ def _delete_user(tx, user_email):
         raise
 
 
-def _create_and_return_user(tx, user_name, user_email, user_password):
-    query = "CREATE (p:User { name: $user_name, email: $user_email, password: $user_password }) RETURN p"
+def _create_and_return_user(tx, user_name, user_email, user_password, is_admin):
+    query = "CREATE (p:User { name: $user_name, email: $user_email, password: $user_password, admin: $is_admin }) RETURN p"
     result = tx.run(query, user_name=user_name, user_email=user_email, user_password=user_password)
     try:
         return [{"name": row["p"]["name"], "email": row["p"]["email"]} for row in result]
@@ -68,12 +68,12 @@ def _find_and_return_password(tx, user_email):
 
 def _find_and_return_login_info(tx, user_email):
     query = (
-        "MATCH (p:User) "
+        "OPTIONAL MATCH (p:User) "
         "WHERE p.email = $user_email "
-        "RETURN p.password AS password, ID(p) as id"
+        "RETURN p.password AS password, ID(p) as id, p.admin as admin"
     )
     result = tx.run(query, user_email=user_email)
-    return [{"password": row["password"], "id": row['id']} for row in result]
+    return [{"password": row["password"], "id": row['id'], "admin": row['admin']} for row in result]
 
 
 def _find_and_return_users(tx):
@@ -160,6 +160,23 @@ def _delete_book(tx, isbn):
 def _add_and_return_book(tx, isbn, year, title, image):
     query = "CREATE (p:Book { isbn: $isbn, year: $year, title: $title, " \
             "image: $image }) RETURN p "
+    result = tx.run(query, isbn=isbn, year=year, title=title, image=image)
+    try:
+        return [
+            {"isbn": row["p"]["isbn"], "year": row["p"]["year"],
+             "title": row["p"]["title"], "image": row["p"]["image"]} for row in result]
+    except ServiceUnavailable as exception:
+        logging.error("{query} raised an error: \n {exception}".format(
+            query=query, exception=exception))
+        raise
+
+
+def _add_and_return_book_with_authors(tx, isbn, year, title, image, authors):
+    query = ("CREATE (p:Book { isbn: $isbn, year: $year, title: $title, "
+             "image: $image }) "
+             f"FOREACH (author_name IN split('{authors}' ',') "
+             "| MERGE (a:Author {name: trim(author_name)})-[:WROTE]->(b)) "
+             "RETURN p ")
     result = tx.run(query, isbn=isbn, year=year, title=title, image=image)
     try:
         return [

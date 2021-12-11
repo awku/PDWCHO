@@ -9,7 +9,8 @@ from .queries import _delete_user, _create_and_return_user, _delete_following, _
     _create_and_return_tag, _is_user_followed, _find_and_return_user, _find_and_return_books_similar_users, \
     _find_and_return_foaf_users, _find_and_return_recommendations_friends_also_read, \
     _find_and_return_recommendations_users_also_read, _find_and_return_recommendations_tags, \
-    _find_and_return_recommendations_tags_author_weighted, _find_and_return_similar_users_by_ratings
+    _find_and_return_recommendations_tags_author_weighted, _find_and_return_similar_users_by_ratings, \
+    _add_and_return_book_with_authors
 
 
 class App:
@@ -28,10 +29,9 @@ class App:
             result = session.write_transaction(_delete_user, user_email)
             return result
 
-    def create_user(self, user_name, user_email, user_password):
-        print(user_name, user_email, user_password)
+    def create_user(self, user_name, user_email, user_password, admin=False):
         with self.driver.session() as session:
-            result = session.write_transaction(_create_and_return_user, user_name, user_email, user_password)
+            result = session.write_transaction(_create_and_return_user, user_name, user_email, user_password, admin)
             return result
 
     def delete_following(self, user_email):
@@ -76,6 +76,11 @@ class App:
     def create_book(self, isbn, year, title, image):
         with self.driver.session() as session:
             result = session.write_transaction(_add_and_return_book, isbn, year, title, image)
+            return result
+
+    def create_book_with_authors(self, isbn, year, title, image, authors):
+        with self.driver.session() as session:
+            result = session.write_transaction(_add_and_return_book_with_authors, isbn, year, title, image, authors)
             return result
 
     def find_books(self):
