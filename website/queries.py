@@ -15,8 +15,10 @@ def _delete_user(tx, user_email):
 
 
 def _create_and_return_user(tx, user_name, user_email, user_password, is_admin):
-    query = "CREATE (p:User { name: $user_name, email: $user_email, password: $user_password, admin: $is_admin }) RETURN p"
-    result = tx.run(query, user_name=user_name, user_email=user_email, user_password=user_password)
+    query = ("CREATE (p:User { "
+             "name: $user_name, email: $user_email, password: $user_password, admin: $is_admin "
+             "}) RETURN p")
+    result = tx.run(query, user_name=user_name, user_email=user_email, user_password=user_password, is_admin=is_admin)
     try:
         return [{"name": row["p"]["name"], "email": row["p"]["email"]} for row in result]
     except ServiceUnavailable as exception:
