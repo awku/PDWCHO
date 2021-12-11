@@ -241,5 +241,5 @@ def create_book_view(request):
                 app.create_book_with_authors(isbn, year, title, image, authors)
                 return redirect('books')
     else:
-        form = CreateAdminForm()
+        form = CreateBookForm()
     return render(request, 'create_book.html', {'form': form})
