@@ -1,0 +1,53 @@
+{% extends 'base_template.html' %}
+{% block content %}
+    <h3 class="mb-0">Search results</h3>
+    <div class="list-group">
+        {% for data in results %}
+            <div class="list-group-item list-group-item-action col-md-3">
+                <a href="{{ data.url }}">
+                    <h6 class="mb-0">{{ data.name }}</h6>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+        {% if results.has_other_pages %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if results.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?search_box={{ query }}&page={{ results.previous_page_number }}"
+                               tabindex="-1">Previous</a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <div class="page-link disabled" tabindex="-1">Previous</div>
+                        </li>
+                    {% endif %}
+                    {% for i in results.paginator.page_range %}
+                        {% if i <= results.number|add:5 and i >= results.number|add:-5 %}
+                            {% if results.number == i %}
+                                <li class="page-item active"><a class="page-link"
+                                                                href="?search_box={{ query }}&page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link"
+                                                         href="?search_box={{ query }}&page={{ i }}">{{ i }}</a></li>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if results.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?search_box={{ query }}&page={{ results.next_page_number }}">Next</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <div class="page-link disabled">Next</div>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+{% endblock %}

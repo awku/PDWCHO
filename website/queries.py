@@ -3,9 +3,9 @@ import logging
 from neo4j.exceptions import ServiceUnavailable
 
 
-def _delete_user(tx, user_email):
-    query = "MATCH (p:User { email: $user_email }) DETACH DELETE p"
-    result = tx.run(query, user_email=user_email)
+def _delete_user(tx, user_id):
+    query = "MATCH (p:User) WHERE ID(p) = $user_id DETACH DELETE p"
+    result = tx.run(query, user_id=user_id)
     try:
         return [{"name": row["p"]["name"], "email": row["p"]["email"]} for row in result]
     except ServiceUnavailable as exception:
@@ -19,6 +19,20 @@ def _create_and_return_user(tx, user_name, user_email, user_password, is_admin):
              "name: $user_name, email: $user_email, password: $user_password, admin: $is_admin "
              "}) RETURN p")
     result = tx.run(query, user_name=user_name, user_email=user_email, user_password=user_password, is_admin=is_admin)
+    try:
+        return [{"name": row["p"]["name"], "email": row["p"]["email"]} for row in result]
+    except ServiceUnavailable as exception:
+        logging.error("{query} raised an error: \n {exception}".format(
+            query=query, exception=exception))
+        raise
+
+
+def _edit_and_return_user(tx, user_id, user_name, user_email, user_password, is_admin):
+    query = ("MATCH (p:User) WHERE ID(p) = $user_id "
+             "SET p = {name: $user_name, email: $user_email, password: $user_password, admin: $is_admin }"
+             "}) RETURN p")
+    result = tx.run(query, user_id=user_id, user_name=user_name, user_email=user_email, user_password=user_password,
+                    is_admin=is_admin)
     try:
         return [{"name": row["p"]["name"], "email": row["p"]["email"]} for row in result]
     except ServiceUnavailable as exception:
@@ -174,16 +188,39 @@ def _add_and_return_book(tx, isbn, year, title, image):
 
 
 def _add_and_return_book_with_authors(tx, isbn, year, title, image, authors):
-    query = ("CREATE (p:Book { isbn: $isbn, year: $year, title: $title, "
+    query = ("CREATE (p:Book { "
+             f"isbn: '{isbn}'"
+             ", year: $year, title: $title, "
              "image: $image }) "
-             f"FOREACH (author_name IN split('{authors}' ',') "
-             "| MERGE (a:Author {name: trim(author_name)})-[:WROTE]->(b)) "
+             f"FOREACH (author_name IN split('{authors}', ',') "
+             "| MERGE (a:Author {name: trim(author_name)})-[:WROTE]->(p)) "
              "RETURN p ")
     result = tx.run(query, isbn=isbn, year=year, title=title, image=image)
     try:
         return [
             {"isbn": row["p"]["isbn"], "year": row["p"]["year"],
              "title": row["p"]["title"], "image": row["p"]["image"]} for row in result]
+    except ServiceUnavailable as exception:
+        logging.error("{query} raised an error: \n {exception}".format(
+            query=query, exception=exception))
+        raise
+
+
+def _edit_and_return_book_with_authors(tx, isbn, year, title, image, authors):
+    query = ("MATCH (b:Book {"
+             f"isbn: '{isbn}'"
+             "})<-[r:WROTE]-(:Author) DELETE r "
+             "SET b = {year: $year, title: $title, image: $image, "
+             f"isbn: '{isbn}'"
+             "} "
+             f"FOREACH (author_name IN split('{authors}', ',') "
+             "| MERGE (a:Author {name: trim(author_name)})-[:WROTE]->(b)) "
+             "RETURN b ")
+    result = tx.run(query, year=year, title=title, image=image)
+    try:
+        return [
+            {"isbn": row["b"]["isbn"], "year": row["b"]["year"],
+             "title": row["b"]["title"], "image": row["b"]["image"]} for row in result]
     except ServiceUnavailable as exception:
         logging.error("{query} raised an error: \n {exception}".format(
             query=query, exception=exception))
@@ -216,19 +253,19 @@ def _find_and_return_tags(tx):
 
 
 def _find_and_return_book(tx, book_isbn):
-    query = ('OPTIONAL MATCH (p:Book) '
+    query = ('MATCH (p:Book) '
              f'WHERE p.isbn = "{book_isbn}" '
              'MATCH (p) <-[:WROTE]-(a:Author) '
              'with p, collect({ name: a.name, id: ID(a) }) as authors '
-             'MATCH (p)-[:IN_TAG]->(t:Tag) '
+             'OPTIONAL MATCH (p)-[:IN_TAG]->(t:Tag) '
              'with p, authors, collect({ name: t.name, id: ID(t) }) as tags '
-             'MATCH (p)<-[r:RATED]-() '
+             'OPTIONAL MATCH (p)<-[r:RATED]-() '
              'RETURN p, authors, tags, avg(r.rating) AS average')
     result = tx.run(query)
     return [
         {"isbn": row["p"]["isbn"], "year": row["p"]["year"], "title": row["p"]["title"],
          "image": row["p"]["image"], "authors": row["authors"], "tags": row["tags"],
-         "average": round(row["average"] * 2) / 2} for row in result]
+         "average": round(row["average"] * 2) / 2 if row["average"] else 0} for row in result]
 
 
 def _add_and_return_rating(tx, user_id, isbn, rating):
@@ -317,18 +354,17 @@ def _mass_upload(tx, filename):
 
 
 def _search(tx, text):
-    results = []
-    query = ("OPTIONAL MATCH (n1:User) WHERE n1.name CONTAINS 'su'"
+    query = ("OPTIONAL MATCH (n1:User) WHERE n1.name CONTAINS $text "
              "WITH collect(distinct n1) as c1 "
-             "OPTIONAL MATCH (n2:Author) WHERE n2.name CONTAINS 'su' "
+             "OPTIONAL MATCH (n2:Author) WHERE n2.name CONTAINS $text "
              "WITH collect(distinct n2) + c1 as c2 "
-             "OPTIONAL MATCH (n3:Tag) WHERE n3.name CONTAINS 'su' "
+             "OPTIONAL MATCH (n3:Tag) WHERE n3.name CONTAINS $text "
              "WITH collect(distinct n3) + c2 as c3 "
-             "OPTIONAL MATCH (n4:Book) WHERE n4.title CONTAINS 'su' "
+             "OPTIONAL MATCH (n4:Book) WHERE n4.title CONTAINS $text "
              "WITH collect(distinct n4) + c3 as c4 "
              "UNWIND c4 as nodes "
-             "RETURN nodes, ID(nodes);")
-    results.append(tx.run(query, text=text))
+             "RETURN nodes, ID(nodes), labels(nodes);")
+    results = tx.run(query, text=text)
     return [row for row in results]
 
 

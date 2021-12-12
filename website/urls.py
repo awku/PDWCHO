@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import index_view, dashboard_view, register_view, login_view, logout_view, users_view, books_view, \
     book_view, user_view, author_view, tag_view, authors_view, tags_view, account_view, out_view, create_book_view, \
-    create_admin_view
+    create_admin_view, search_view
 
 urlpatterns = [
     path('', index_view, name="home"),
@@ -21,5 +21,6 @@ urlpatterns = [
     path('my_account/', account_view, name="account"),
     path('quit/', out_view, name="out"),
     path('create_book/', create_book_view, name="create_book"),
-    path('create_admin/', create_admin_view, name="create_admin")
+    path('create_admin/', create_admin_view, name="create_admin"),
+    path('search/', search_view, name="search"),
 ]

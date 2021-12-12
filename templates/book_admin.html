@@ -1,0 +1,57 @@
+{% extends 'base_template.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="card mb-3">
+        <div class="row g-0">
+            <div class="col-md-4 mx-auto">
+                <img src="{{ book.image }}" class="img-fluid rounded-start" alt="...">
+                <div class="gap-2 text-warning mb-2 mx-auto">
+                    <p class="card-text">Average:
+                        <script>
+							drawStars({{ book.average }});
+                        </script>
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"> authors:
+                        {% for author in book.authors %}
+                            <a href="/author?id={{ author.id }}">{{ author.name }}</a>
+                        {% endfor %}
+                    </p>
+                    <p class="card-text"> year:
+                        {{ book.year }}
+                    </p>
+                    <div class="card-text">
+                        Tags:
+                        {% for tag in book.tags %}
+                            <a href="/tag?id={{ tag.id }}">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        onClick="document.getElementById('form').style.display= 'block'">
+                    Edit
+                </button>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        Delete
+                    </button>
+                </form>
+                <div id="form" style="display: none">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="_method" value="patch">
+                        {{ form|crispy }}
+                        <button type="submit" class="btn btn-secondary btn-sm">Submit</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -10,7 +10,7 @@ from .queries import _delete_user, _create_and_return_user, _delete_following, _
     _find_and_return_foaf_users, _find_and_return_recommendations_friends_also_read, \
     _find_and_return_recommendations_users_also_read, _find_and_return_recommendations_tags, \
     _find_and_return_recommendations_tags_author_weighted, _find_and_return_similar_users_by_ratings, \
-    _add_and_return_book_with_authors
+    _add_and_return_book_with_authors, _edit_and_return_book_with_authors, _edit_and_return_user, _search
 
 
 class App:
@@ -24,14 +24,25 @@ class App:
     def close(self):
         self.driver.close()
 
-    def delete_user(self, user_email):
+    def delete_user(self, user_id):
         with self.driver.session() as session:
-            result = session.write_transaction(_delete_user, user_email)
+            result = session.write_transaction(_delete_user, user_id)
             return result
 
     def create_user(self, user_name, user_email, user_password, admin=False):
         with self.driver.session() as session:
             result = session.write_transaction(_create_and_return_user, user_name, user_email, user_password, admin)
+            return result
+
+    def edit_user(self, user_id, user_name, user_email, user_password, admin=False):
+        with self.driver.session() as session:
+            result = session.write_transaction(_edit_and_return_user, user_id, user_name, user_email, user_password,
+                                               admin)
+            return result
+
+    def find_search_results(self, text):
+        with self.driver.session() as session:
+            result = session.write_transaction(_search, text)
             return result
 
     def delete_following(self, user_email):
@@ -81,6 +92,12 @@ class App:
     def create_book_with_authors(self, isbn, year, title, image, authors):
         with self.driver.session() as session:
             result = session.write_transaction(_add_and_return_book_with_authors, isbn, year, title, image, authors)
+            print(result)
+            return result
+
+    def edit_book_with_authors(self, isbn, year, title, image, authors):
+        with self.driver.session() as session:
+            result = session.write_transaction(_edit_and_return_book_with_authors, isbn, year, title, image, authors)
             return result
 
     def find_books(self):
@@ -180,6 +197,7 @@ class App:
             result = session.read_transaction(_find_and_return_recommendations_tags_author_weighted, user_id)
             return result
 
+# app = App()
 # app.mass_uploading_data("C:\\Users\\Ola\\Downloads\\books_queries.txt")
 # app.mass_uploading_data("C:\\Users\\Ola\\Downloads\\authors_queries.txt")
 # app.mass_uploading_data("C:\\Users\\Ola\\Downloads\\authors_books_queries.txt")
@@ -189,3 +207,4 @@ class App:
 # app.mass_uploading_data("C:\\Users\\Ola\\Downloads\\books_tags_queries1.txt")
 # app.mass_uploading_data("C:\\Users\\Ola\\Downloads\\books_tags_queries2.txt")
 # app.mass_uploading_data("C:\\Users\\Ola\\Downloads\\users_following_queries.txt")
+# app.close()

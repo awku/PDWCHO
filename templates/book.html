@@ -27,6 +27,7 @@
                         <form method="post">
                             {% csrf_token %}
                             {{ tag_form|crispy }}
+                            <input type="hidden" name="_function" value="tagging">
                             <button type="submit" class="btn btn-primary">Add</button>
                         </form>
                     </div>
@@ -38,6 +39,7 @@
                         <form method="post">
                             {% csrf_token %}
                             {{ rate_form|crispy }}
+                            <input type="hidden" name="_function" value="rating">
                             <button type="submit" class="btn btn-primary">Add</button>
                         </form>
                     </div>

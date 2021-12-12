@@ -1,6 +1,11 @@
 {% extends 'base_template.html' %}
+{% load crispy_forms_tags %}
 {% block content %}
-    <h3 class="mb-0">{{ user.name }}</h3>
+    {% if not user.name %}
+        <h3 class="mb-0">Admin</h3>
+    {% else %}
+        <h3 class="mb-0">{{ user.name }}</h3>
+    {% endif %}
     <h4 class="mb-0">Rated books</h4>
     <div class="list-group">
         {% if user.books.0.isbn %}
@@ -38,12 +43,23 @@
             </div>
         {% endif %}
     </div>
-    {% if can_follow == 'not followed' %}
+    <button type="button" class="btn btn-secondary btn-sm"
+            onClick="document.getElementById('form').style.display= 'block'">
+        Edit
+    </button>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="_method" value="delete">
+        <button type="submit" class="btn btn-secondary btn-sm">
+            Delete account
+        </button>
+    </form>
+    <div id="form" style="display: none">
         <form method="post">
             {% csrf_token %}
-            <button type="submit" class="btn btn-primary">Follow</button>
+            <input type="hidden" name="_method" value="patch">
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-secondary btn-sm">Submit</button>
         </form>
-    {% elif can_follow == 'followed' %}
-        <a class="btn btn-primary" href="#" role="button">Already followed</a>
-    {% endif %}
+    </div>
 {% endblock %}

@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 
 from .db import App
 from .forms import SignUpForm, LoginForm, RateBookForm, TagBookForm, RecommendUsersForm, RecommendBooksForm, \
-    CreateAdminForm, CreateBookForm
+    CreateAdminForm, CreateBookForm, EditBookForm
 
 app = App()
 
@@ -90,7 +90,7 @@ def register_view(request):
 
     else:
         form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'basic_form.html', {'form': form, 'page_title': 'Sign up', 'button_text': 'Sign up'})
 
 
 def login_view(request):
@@ -110,13 +110,15 @@ def login_view(request):
                 return redirect('dashboard')
     else:
         form = LoginForm()
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'basic_form.html', {'form': form, 'page_title': 'Login', 'button_text': 'Login'})
 
 
 def logout_view(request):
-    if request.session.exists(request.session.session_key) and request.session["user_id"]:
-        request.session.pop("user_id")
-        request.session.pop("admin")
+    if request.session.exists(request.session.session_key):
+        if 'user_id' in request.session:
+            request.session.pop("user_id")
+        if 'admin' in request.session:
+            request.session.pop("admin")
     return redirect('/books')
 
 
@@ -129,26 +131,86 @@ def books_view(request):
         return render(request, 'books.html', {'books': books})
 
 
+def search_view(request):
+    if request.method == 'GET':
+        is_logged_in = 'user_id' in request.session
+        search_query = request.GET.get('search_box', None)
+        search_results = app.find_search_results(search_query)
+        results_data = []
+        for row in search_results:
+            if 'Book' in row['labels(nodes)']:
+                results_data.append({'name': row['nodes']['title'], 'url': f"/book?isbn={row['nodes']['isbn']}"})
+            elif 'Author' in row['labels(nodes)']:
+                results_data.append({'name': row['nodes']['name'], 'url': f"/author?id={row['ID(nodes)']}"})
+            elif 'Tag' in row['labels(nodes)']:
+                results_data.append({'name': row['nodes']['name'], 'url': f"/tag?id={row['ID(nodes)']}"})
+            elif 'User' in row['labels(nodes)'] and is_logged_in:
+                results_data.append({'name': row['nodes']['name'], 'url': f"/user?id={row['ID(nodes)']}"})
+        page = request.GET.get('page', 1)
+        paginator = Paginator(results_data, 10)
+        results = paginator.page(page)
+        return render(request, 'search.html', {'results': results, 'query': search_query})
+
+
 @logged_in
 def book_view(request):
+    if 'admin' in request.session:
+        return book_admin_view(request)
     isbn = request.GET.get('isbn')
-    user_id = request.session["user_id"]
-    book_data = app.find_book(isbn)[0]
-    is_rated = app.is_book_rated(user_id, isbn)
-    if request.method == "POST":
-        rate_form = RateBookForm(request.POST)
-        if rate_form.is_valid():
-            rating = rate_form.cleaned_data.get('rating')
-            app.create_rating(user_id, isbn, rating)
-        tag_form = TagBookForm(request.POST)
-        if tag_form.is_valid():
-            tag = tag_form.cleaned_data.get('tag')
-            app.create_tag(isbn, tag)
+    book_data = app.find_book(isbn)
+    if book_data:
+        book_data = app.find_book(isbn)[0]
+        user_id = request.session["user_id"]
+        is_rated = app.is_book_rated(user_id, isbn)
+        if request.method == "POST":
+            form_function = request.POST.get('_function', '').lower()
+            tag_form = TagBookForm(request.POST)
+            rate_form = RateBookForm(request.POST)
+            if form_function == 'tagging':
+                if tag_form.is_valid():
+                    tag = tag_form.cleaned_data.get('tag')
+                    app.create_tag(isbn, tag)
+            if form_function == 'rating':
+                if rate_form.is_valid():
+                    rating = rate_form.cleaned_data.get('rating')
+                    app.create_rating(user_id, isbn, rating)
+            return render(request, 'book.html',
+                          {'book': book_data, 'rate_form': rate_form, 'tag_form': tag_form, 'is_rated': is_rated})
+        elif request.method == "GET":
+            rate_form = RateBookForm()
+            tag_form = TagBookForm()
+            return render(request, 'book.html',
+                          {'book': book_data, 'rate_form': rate_form, 'tag_form': tag_form, 'is_rated': is_rated})
     else:
-        rate_form = RateBookForm()
-        tag_form = TagBookForm()
-    return render(request, 'book.html',
-                  {'book': book_data, 'rate_form': rate_form, 'tag_form': tag_form, 'is_rated': is_rated})
+        return render(request, 'error.html')
+
+
+@logged_admin
+def book_admin_view(request):
+    isbn = request.GET.get('isbn')
+    book_data = app.find_book(isbn)
+    if book_data:
+        book_data = app.find_book(isbn)[0]
+        if request.method == "POST":
+            method = request.POST.get('_method', '').lower()
+            if method == 'patch':
+                form = EditBookForm(request.POST)
+                if form.is_valid():
+                    title = form.cleaned_data.get("title")
+                    year = form.cleaned_data.get("year")
+                    image = form.cleaned_data.get("image")
+                    authors = form.cleaned_data.get("authors")
+                    app.edit_book_with_authors(isbn, year, title, image, authors)
+            elif method == 'delete':
+                app.delete_book(isbn)
+                return redirect('books')
+        init_data = {'title': book_data['title'], 'isbn': book_data['isbn'], 'year': book_data['year'],
+                     'image': book_data['image'],
+                     'authors': ','.join(data['name'] for data in book_data['authors'])}
+        form = EditBookForm(initial=init_data)
+        return render(request, 'book_admin.html', {'form': form, 'book': book_data})
+    else:
+        return render(request, 'error.html')
 
 
 @logged_in
@@ -164,10 +226,26 @@ def user_view(request):
 
 @logged_in
 def account_view(request):
-    if request.method == "GET":
-        user_id = request.session["user_id"]
-        user_data = app.find_user_by_id(user_id)[0]
-        return render(request, 'user.html', {'user': user_data, 'can_follow': 'no'})
+    user_id = request.session["user_id"]
+    user_data = app.find_user_by_id(user_id)[0]
+    if request.method == "POST":
+        method = request.POST.get('_method', '').lower()
+        if method == 'patch':
+            if 'admin' in request.session:
+                form = CreateAdminForm(request.POST)
+            else:
+                form = SignUpForm(request.POST)
+            if form.is_valid():
+                user_name = form.cleaned_data.get("name") if 'admin' not in request.session else None
+                user_email = form.cleaned_data.get("email")
+                user_password = form.cleaned_data.get("password")
+                admin = 'admin' in request.session
+                app.edit_user(user_id, user_name, user_email, user_password, admin)
+        elif method == 'delete':
+            app.delete_user(user_id)
+            return logout_view(request)
+    form = CreateAdminForm() if 'admin' in request.session else SignUpForm()
+    return render(request, 'account.html', {'user': user_data, 'form': form})
 
 
 def author_view(request):
@@ -224,7 +302,7 @@ def create_admin_view(request):
                 return redirect('home')
     else:
         form = CreateAdminForm()
-    return render(request, 'create_admin.html', {'form': form})
+    return render(request, 'basic_form.html', {'form': form, 'page_title': 'Create admin', 'button_text': 'Create'})
 
 
 @logged_admin
@@ -242,4 +320,4 @@ def create_book_view(request):
                 return redirect('books')
     else:
         form = CreateBookForm()
-    return render(request, 'create_book.html', {'form': form})
+    return render(request, 'basic_form.html', {'form': form, 'page_title': 'Create book', 'button_text': 'Create'})

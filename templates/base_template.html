@@ -11,11 +11,6 @@
             crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/9125c5aacb.js" crossorigin="anonymous"></script>
     <script>
-		window.onbeforeunload = function (e) {
-			fetch('/quit');
-		};
-    </script>
-    <script>
 		function drawStars(rating) {
 			let result = "";
 			const full = Math.floor(rating);
@@ -52,6 +47,10 @@
                     <li><a href="/create_book" class="nav-link px-2 link-dark">Add book</a></li>
                 {% endif %}
             </ul>
+            <form type="get" action="/search" class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3">
+                <input type="search" name="search_box" id="search_box" class="form-control" placeholder="Search..."
+                       aria-label="Search">
+            </form>
             {% if request.session.user_id %}
                 <div class="dropdown text-end">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1"
