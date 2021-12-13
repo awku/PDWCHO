@@ -163,7 +163,6 @@ def book_view(request):
     if book_data:
         book_data = app.find_book(isbn)[0]
         user_id = request.session["user_id"]
-        is_rated = app.is_book_rated(user_id, isbn)
         if request.method == "POST":
             form_function = request.POST.get('_function', '').lower()
             rate_form = RateBookForm()
@@ -178,11 +177,13 @@ def book_view(request):
                 if rate_form.is_valid():
                     rating = rate_form.cleaned_data.get('rating')
                     app.create_rating(user_id, isbn, rating)
+            is_rated = app.is_book_rated(user_id, isbn)
             return render(request, 'book.html',
                           {'book': book_data, 'rate_form': rate_form, 'tag_form': tag_form, 'is_rated': is_rated})
         elif request.method == "GET":
             rate_form = RateBookForm()
             tag_form = TagBookForm()
+            is_rated = app.is_book_rated(user_id, isbn)
             return render(request, 'book.html',
                           {'book': book_data, 'rate_form': rate_form, 'tag_form': tag_form, 'is_rated': is_rated})
     else:
