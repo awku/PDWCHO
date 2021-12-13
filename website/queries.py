@@ -59,7 +59,7 @@ def _create_and_return_following(tx, user1_id, user2_id):
     query = (
         f"MATCH (u1:User) WHERE ID(u1) = {user1_id} "
         f"MATCH (u2:User) WHERE ID(u2) = {user2_id} "
-        "CREATE (u1)-[:FOLLOWS]->(u2) "
+        "MERGE (u1)-[:FOLLOWS]->(u2) "
         "RETURN u1, u2"
     )
     result = tx.run(query)
@@ -84,7 +84,7 @@ def _find_and_return_password(tx, user_email):
 
 def _find_and_return_login_info(tx, user_email):
     query = (
-        "OPTIONAL MATCH (p:User) "
+        "MATCH (p:User) "
         "WHERE p.email = $user_email "
         "RETURN p.password AS password, ID(p) as id, p.admin as admin"
     )
@@ -128,7 +128,7 @@ def _find_and_return_author_by_id(tx, author_id):
     query = (
         "MATCH (p:Author) "
         f"WHERE ID(p) = {author_id} "
-        "MATCH (p)-[r:WROTE]->(b:Book) "
+        "OPTIONAL MATCH (p)-[r:WROTE]->(b:Book) "
         "with p, collect({ isbn: b.isbn, title: b.title}) as books "
         "RETURN p.name as name, books"
     )
@@ -140,7 +140,7 @@ def _find_and_return_tag_by_id(tx, tag_id):
     query = (
         "MATCH (p:Tag) "
         f"WHERE ID(p) = {tag_id} "
-        "MATCH (p)<-[r:IN_TAG]-(b:Book) "
+        "OPTIONAL MATCH (p)<-[r:IN_TAG]-(b:Book) "
         "with p, collect({ isbn: b.isbn, title: b.title}) as books "
         "RETURN p.name as name, books"
     )
@@ -149,8 +149,8 @@ def _find_and_return_tag_by_id(tx, tag_id):
 
 
 def _find_and_return_following(tx, user_email):
-    query = ("OPTIONAL MATCH (p1:User) WHERE p1.email = $user_email "
-             "MATCH (p1)-[:FOLLOWS]-(p2:User) "
+    query = ("MATCH (p1:User) WHERE p1.email = $user_email "
+             "OPTIONAL MATCH (p1)-[:FOLLOWS]-(p2:User) "
              "RETURN p2"
              )
     result = tx.run(query, user_email=user_email)
@@ -255,7 +255,7 @@ def _find_and_return_tags(tx):
 def _find_and_return_book(tx, book_isbn):
     query = ('MATCH (p:Book) '
              f'WHERE p.isbn = "{book_isbn}" '
-             'MATCH (p) <-[:WROTE]-(a:Author) '
+             'OPTIONAL MATCH (p) <-[:WROTE]-(a:Author) '
              'with p, collect({ name: a.name, id: ID(a) }) as authors '
              'OPTIONAL MATCH (p)-[:IN_TAG]->(t:Tag) '
              'with p, authors, collect({ name: t.name, id: ID(t) }) as tags '
@@ -272,7 +272,7 @@ def _add_and_return_rating(tx, user_id, isbn, rating):
     query = (
         'MATCH (p:User) WHERE ID(p) = $user_id '
         f'MATCH (b:Book) WHERE b.isbn = "{isbn}" '
-        'CREATE (p)-[r:RATED {rating: $rating}]->(b) '
+        'MERGE (p)-[r:RATED {rating: $rating}]->(b) '
         'RETURN p, b, r'
     )
     result = tx.run(query, user_id=user_id, rating=rating)
@@ -286,7 +286,7 @@ def _add_and_return_rating(tx, user_id, isbn, rating):
 
 def _is_book_rated(tx, user_id, isbn):
     query = ('MATCH (u:User) WHERE ID(u) = $user_id '
-             'MATCH (u) -[r:RATED]->(b:Book) '
+             'OPTIONAL MATCH (u) -[r:RATED]->(b:Book) '
              f'WHERE b.isbn= "{isbn}" '
              'RETURN r.rating as rating')
     result = tx.run(query, user_id=user_id)
@@ -296,15 +296,15 @@ def _is_book_rated(tx, user_id, isbn):
 def _is_user_followed(tx, user1_id, user2_id):
     query = ('MATCH (u1:User) WHERE ID(u1) = $user1_id '
              'MATCH (u2:User) WHERE ID(u2) = $user2_id '
-             'MATCH (u1)-[:FOLLOWS]->(u2) '
+             'OPTIONAL MATCH (u1)-[:FOLLOWS]->(u2) '
              'RETURN u1, u2')
     result = tx.run(query, user1_id=user1_id, user2_id=user2_id)
     return [{'u1': row['u1'], 'u2': row['u2']} for row in result]
 
 
 def _delete_rating(tx, user_email, isbn):
-    query = ("OPTIONAL MATCH (p:User) WHERE p.email = $user_email "
-             "OPTIONAL MATCH (b:Book) WHERE b.isbn = $isbn "
+    query = ("MATCH (p:User) WHERE p.email = $user_email "
+             "MATCH (b:Book) WHERE b.isbn = $isbn "
              "MATCH (p)-[r:RATED]-(b) "
              "DELETE r"
              )
