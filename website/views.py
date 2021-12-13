@@ -228,7 +228,7 @@ def user_view(request):
         if request.method == "POST":
             app.create_following(user1_id, user2_id)
         is_followed = 'followed' if app.is_user_followed(user1_id, user2_id) else 'not followed'
-        return render(request, 'user.html', {'user': user_data, 'can_follow': is_followed})
+        return render(request, 'user.html', {'user': user_data, 'can_follow': app.is_user_followed(user1_id, user2_id)})
     else:
         return render(request, 'error.html')
 
@@ -236,7 +236,6 @@ def user_view(request):
 @logged_in
 def account_view(request):
     user_id = request.session["user_id"]
-    user_data = app.find_user_by_id(user_id)[0]
     if request.method == "POST":
         method = request.POST.get('_method', '').lower()
         if method == 'patch':
@@ -252,6 +251,7 @@ def account_view(request):
     user_init = app.find_user_data_by_id(user_id)[0]
     init_data = {'name': user_init['name'], 'email': user_init['email']}
     form = EditUserForm(initial=init_data) if 'admin' not in request.session else None
+    user_data = app.find_user_by_id(user_id)[0]
     return render(request, 'account.html', {'user': user_data, 'form': form})
 
 
