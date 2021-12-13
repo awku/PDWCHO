@@ -42,6 +42,11 @@ class EditBookForm(forms.Form):
                         help_text="For more than 1 author, please separate each with a comma (,)")
 
 
+class EditUserForm(forms.Form):
+    name = CharField(label='Name', max_length=100)
+    email = EmailField(label='E-mail', max_length=100)
+    
+
 user_choices = [
     (1, 'users followed by users I follow'),
     (2, 'users who similarly rated the same books I did'),

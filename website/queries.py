@@ -27,12 +27,12 @@ def _create_and_return_user(tx, user_name, user_email, user_password, is_admin):
         raise
 
 
-def _edit_and_return_user(tx, user_id, user_name, user_email, user_password, is_admin):
+def _edit_and_return_user(tx, user_id, user_name, user_email):
     query = ("MATCH (p:User) WHERE ID(p) = $user_id "
-             "SET p = {name: $user_name, email: $user_email, password: $user_password, admin: $is_admin }"
-             "}) RETURN p")
-    result = tx.run(query, user_id=user_id, user_name=user_name, user_email=user_email, user_password=user_password,
-                    is_admin=is_admin)
+             "SET p.name = $user_name "
+             "SET p.email = $user_email "
+             "RETURN p")
+    result = tx.run(query, user_id=user_id, user_name=user_name, user_email=user_email)
     try:
         return [{"name": row["p"]["name"], "email": row["p"]["email"]} for row in result]
     except ServiceUnavailable as exception:
@@ -122,6 +122,16 @@ def _find_and_return_user_by_id(tx, user_id):
     )
     result = tx.run(query)
     return [{"name": row["name"], "books": row["books"], "users": row["users"]} for row in result]
+
+
+def _find_and_return_user_data_by_id(tx, user_id):
+    query = (
+        "MATCH (p:User) "
+        f"WHERE ID(p) = {user_id} "
+        "RETURN p.name as name, p.email as email"
+    )
+    result = tx.run(query)
+    return [{"name": row["name"], "email": row["email"]} for row in result]
 
 
 def _find_and_return_author_by_id(tx, author_id):

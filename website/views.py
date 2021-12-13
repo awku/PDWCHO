@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 
 from .db import App
 from .forms import SignUpForm, LoginForm, RateBookForm, TagBookForm, RecommendUsersForm, RecommendBooksForm, \
-    CreateAdminForm, CreateBookForm, EditBookForm
+    CreateAdminForm, CreateBookForm, EditBookForm, EditUserForm
 
 app = App()
 
@@ -240,20 +240,18 @@ def account_view(request):
     if request.method == "POST":
         method = request.POST.get('_method', '').lower()
         if method == 'patch':
-            if 'admin' in request.session:
-                form = CreateAdminForm(request.POST)
-            else:
-                form = SignUpForm(request.POST)
-            if form.is_valid():
-                user_name = form.cleaned_data.get("name") if 'admin' not in request.session else None
-                user_email = form.cleaned_data.get("email")
-                user_password = form.cleaned_data.get("password")
-                admin = 'admin' in request.session
-                app.edit_user(user_id, user_name, user_email, user_password, admin)
+            if 'admin' not in request.session:
+                form = EditUserForm(request.POST)
+                if form.is_valid():
+                    user_name = form.cleaned_data.get("name")
+                    user_email = form.cleaned_data.get("email")
+                    app.edit_user(user_id, user_name, user_email)
         elif method == 'delete':
             app.delete_user(user_id)
             return logout_view(request)
-    form = CreateAdminForm() if 'admin' in request.session else SignUpForm()
+    user_init = app.find_user_data_by_id(user_id)[0]
+    init_data = {'name': user_init['name'], 'email': user_init['email']}
+    form = EditUserForm(initial=init_data) if 'admin' not in request.session else None
     return render(request, 'account.html', {'user': user_data, 'form': form})
 
 
