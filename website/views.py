@@ -76,7 +76,8 @@ def dashboard_view(request):
             if selected == "4":
                 users_data = None
                 books_data = app.find_books_recommendations_similar_tags_author_weighted(user_id)
-                version = 'books with common tags to the previously rated books or written by the same authors (weighted)'
+                version = 'books with common tags to the previously rated books or written by the same authors (' \
+                          'weighted) '
     else:
         user_form = RecommendUsersForm()
         book_form = RecommendBooksForm()
@@ -205,7 +206,6 @@ def book_admin_view(request):
     isbn = request.GET.get('isbn')
     book_data = app.find_book(isbn)
     if book_data:
-        book_data = app.find_book(isbn)[0]
         if request.method == "POST":
             method = request.POST.get('_method', '').lower()
             if method == 'patch':
@@ -219,6 +219,7 @@ def book_admin_view(request):
             elif method == 'delete':
                 app.delete_book(isbn)
                 return redirect('books')
+        book_data = app.find_book(isbn)[0]
         init_data = {'title': book_data['title'], 'isbn': book_data['isbn'], 'year': book_data['year'],
                      'image': book_data['image'],
                      'authors': ','.join(data['name'] for data in book_data['authors'])}
