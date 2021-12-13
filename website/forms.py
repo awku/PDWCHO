@@ -13,11 +13,11 @@ class LoginForm(forms.Form):
 
 
 class RateBookForm(forms.Form):
-    rating = FloatField(label='rating', min_value=0, max_value=5)
+    rating = FloatField(label='', min_value=0, max_value=5)
 
 
 class TagBookForm(forms.Form):
-    tag = CharField(label='tag', max_length=100)
+    tag = CharField(label='', max_length=100)
 
 
 class CreateAdminForm(forms.Form):
