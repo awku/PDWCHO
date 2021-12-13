@@ -126,7 +126,7 @@ def _find_and_return_user_by_id(tx, user_id):
 
 def _find_and_return_author_by_id(tx, author_id):
     query = (
-        "OPTIONAL MATCH (p:Author) "
+        "MATCH (p:Author) "
         f"WHERE ID(p) = {author_id} "
         "MATCH (p)-[r:WROTE]->(b:Book) "
         "with p, collect({ isbn: b.isbn, title: b.title}) as books "
@@ -138,7 +138,7 @@ def _find_and_return_author_by_id(tx, author_id):
 
 def _find_and_return_tag_by_id(tx, tag_id):
     query = (
-        "OPTIONAL MATCH (p:Tag) "
+        "MATCH (p:Tag) "
         f"WHERE ID(p) = {tag_id} "
         "MATCH (p)<-[r:IN_TAG]-(b:Book) "
         "with p, collect({ isbn: b.isbn, title: b.title}) as books "
