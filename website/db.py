@@ -148,8 +148,9 @@ class App:
     def is_user_followed(self, user1_id, user2_id):
         with self.driver.session() as session:
             result = session.read_transaction(_is_user_followed, user1_id, user2_id)
-            for _ in result:
-                return True
+            for row in result:
+                if row:
+                    return True
             return False
 
     def delete_rating(self, user_email, isbn):
