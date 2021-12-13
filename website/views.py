@@ -45,6 +45,7 @@ def dashboard_view(request):
     users_data = None
     books_data = None
     user_id = request.session["user_id"]
+    version = None
     if request.method == "POST":
         user_form = RecommendUsersForm(request.POST)
         book_form = RecommendBooksForm(request.POST)
