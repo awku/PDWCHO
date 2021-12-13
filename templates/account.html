@@ -43,7 +43,7 @@
             </div>
         {% endif %}
     </div>
-    {% if not user.name %}
+    {% if user.name %}
         <button type="button" class="btn btn-secondary btn-sm"
                 onClick="document.getElementById('form').style.display= 'block'">
             Edit
