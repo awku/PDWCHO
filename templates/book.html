@@ -19,7 +19,7 @@
                         </p>
                     {% endif %}
                 </div>
-                {% if is_rated %}
+                {% if is_rated.0.rating %}
                     <button type="button" class="btn btn-primary"
                             onClick="document.getElementById('tag_form').style.display= 'block'">Add tag
                     </button>
