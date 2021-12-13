@@ -354,13 +354,13 @@ def _mass_upload(tx, filename):
 
 
 def _search(tx, text):
-    query = ("OPTIONAL MATCH (n1:User) WHERE n1.name CONTAINS $text "
+    query = ("OPTIONAL MATCH (n1:User) WHERE toLower(n1.name) CONTAINS toLower($text) "
              "WITH collect(distinct n1) as c1 "
-             "OPTIONAL MATCH (n2:Author) WHERE n2.name CONTAINS $text "
+             "OPTIONAL MATCH (n2:Author) WHERE toLower(n2.name) CONTAINS toLower($text) "
              "WITH collect(distinct n2) + c1 as c2 "
-             "OPTIONAL MATCH (n3:Tag) WHERE n3.name CONTAINS $text "
+             "OPTIONAL MATCH (n3:Tag) WHERE toLower(n3.name) CONTAINS toLower($text) "
              "WITH collect(distinct n3) + c2 as c3 "
-             "OPTIONAL MATCH (n4:Book) WHERE n4.title CONTAINS $text "
+             "OPTIONAL MATCH (n4:Book) WHERE toLower(n4.title) CONTAINS toLower($text) "
              "WITH collect(distinct n4) + c3 as c4 "
              "UNWIND c4 as nodes "
              "RETURN nodes, ID(nodes), labels(nodes);")
