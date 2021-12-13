@@ -10,7 +10,8 @@ from .queries import _delete_user, _create_and_return_user, _delete_following, _
     _find_and_return_foaf_users, _find_and_return_recommendations_friends_also_read, \
     _find_and_return_recommendations_users_also_read, _find_and_return_recommendations_tags, \
     _find_and_return_recommendations_tags_author_weighted, _find_and_return_similar_users_by_ratings, \
-    _add_and_return_book_with_authors, _edit_and_return_book_with_authors, _edit_and_return_user, _search
+    _add_and_return_book_with_authors, _edit_and_return_book_with_authors, _edit_and_return_user, _search, \
+    _find_and_return_user_data_by_id
 
 
 class App:
@@ -123,6 +124,11 @@ class App:
     def find_user_by_id(self, user_id):
         with self.driver.session() as session:
             result = session.read_transaction(_find_and_return_user_by_id, user_id)
+            return result
+
+    def find_user_data_by_id(self, user_id):
+        with self.driver.session() as session:
+            result = session.read_transaction(_find_and_return_user_data_by_id, user_id)
             return result
 
     def find_tag_by_id(self, tag_id):
