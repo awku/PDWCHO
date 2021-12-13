@@ -35,10 +35,9 @@ class App:
             result = session.write_transaction(_create_and_return_user, user_name, user_email, user_password, admin)
             return result
 
-    def edit_user(self, user_id, user_name, user_email, user_password, admin=False):
+    def edit_user(self, user_id, user_name, user_email):
         with self.driver.session() as session:
-            result = session.write_transaction(_edit_and_return_user, user_id, user_name, user_email, user_password,
-                                               admin)
+            result = session.write_transaction(_edit_and_return_user, user_id, user_name, user_email)
             return result
 
     def find_search_results(self, text):
