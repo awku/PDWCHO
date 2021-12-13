@@ -11,7 +11,7 @@
 							drawStars({{ book.average }});
                         </script>
                     </p>
-                    {% if is_rated %}
+                    {% if is_rated.0.rating %}
                         <p class="card-text">My rating:
                             <script>
 								drawStars({{ is_rated.0.rating }});

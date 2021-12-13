@@ -227,7 +227,7 @@ def user_view(request):
         user_data = user_data[0]
         if request.method == "POST":
             app.create_following(user1_id, user2_id)
-        is_followed = 'followed' if app.is_user_followed(user1_id, user2_id) else 'not followed'
+        is_followed = 'followed' if app.is_user_followed(user1_id, user2_id)[0] else 'not followed'
         return render(request, 'user.html', {'user': user_data, 'can_follow': is_followed})
     else:
         return render(request, 'error.html')
