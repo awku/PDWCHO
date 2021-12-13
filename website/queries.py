@@ -306,7 +306,7 @@ def _is_book_rated(tx, user_id, isbn):
 def _is_user_followed(tx, user1_id, user2_id):
     query = ('MATCH (u1:User) WHERE ID(u1) = $user1_id '
              'MATCH (u2:User) WHERE ID(u2) = $user2_id '
-             'OPTIONAL MATCH (u1)-[:FOLLOWS]->(u2) '
+             'MATCH (u1)-[:FOLLOWS]->(u2) '
              'RETURN u1, u2')
     result = tx.run(query, user1_id=user1_id, user2_id=user2_id)
     return [{'u1': row['u1'], 'u2': row['u2']} for row in result]
