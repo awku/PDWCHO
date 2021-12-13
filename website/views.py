@@ -99,15 +99,17 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get("password")
-            user_password = app.find_login_info(email)[0]['password']
-            if user_password and check_password(password, user_password):
-                if not request.session.exists(request.session.session_key):
-                    request.session.create()
-                user_id = app.find_login_info(email)[0]['id']
-                request.session["user_id"] = user_id
-                if app.find_login_info(email)[0]['admin']:
-                    request.session["admin"] = True
-                return redirect('dashboard')
+            user_password = app.find_login_info(email)
+            if user_password:
+                user_password = user_password[0]['password']
+                if user_password and check_password(password, user_password):
+                    if not request.session.exists(request.session.session_key):
+                        request.session.create()
+                    user_id = app.find_login_info(email)[0]['id']
+                    request.session["user_id"] = user_id
+                    if app.find_login_info(email)[0]['admin']:
+                        request.session["admin"] = True
+                    return redirect('dashboard')
     else:
         form = LoginForm()
     return render(request, 'basic_form.html', {'form': form, 'page_title': 'Login', 'button_text': 'Login'})
@@ -217,11 +219,15 @@ def book_admin_view(request):
 def user_view(request):
     user1_id = request.session["user_id"]
     user2_id = request.GET.get('id')
-    user_data = app.find_user_by_id(user2_id)[0]
-    if request.method == "POST":
-        app.create_following(user1_id, user2_id)
-    is_followed = 'followed' if app.is_user_followed(user1_id, user2_id) else 'not followed'
-    return render(request, 'user.html', {'user': user_data, 'can_follow': is_followed})
+    user_data = app.find_user_by_id(user2_id)
+    if user_data:
+        user_data = user_data[0]
+        if request.method == "POST":
+            app.create_following(user1_id, user2_id)
+        is_followed = 'followed' if app.is_user_followed(user1_id, user2_id) else 'not followed'
+        return render(request, 'user.html', {'user': user_data, 'can_follow': is_followed})
+    else:
+        return render(request, 'error.html')
 
 
 @logged_in
@@ -251,15 +257,23 @@ def account_view(request):
 def author_view(request):
     if request.method == "GET":
         author_id = request.GET.get('id')
-        author_data = app.find_author_by_id(author_id)[0]
-        return render(request, 'author.html', {'author': author_data})
+        author_data = app.find_author_by_id(author_id)
+        if author_data:
+            author_data = author_data[0]
+            return render(request, 'author.html', {'author': author_data})
+        else:
+            return render(request, 'error.html')
 
 
 def tag_view(request):
     if request.method == "GET":
         tag_id = request.GET.get('id')
-        tag_data = app.find_tag_by_id(tag_id)[0]
-        return render(request, 'tag.html', {'tag': tag_data})
+        tag_data = app.find_tag_by_id(tag_id)
+        if tag_data:
+            tag_data = tag_data[0]
+            return render(request, 'tag.html', {'tag': tag_data})
+        else:
+            return render(request, 'error.html')
 
 
 @logged_in
