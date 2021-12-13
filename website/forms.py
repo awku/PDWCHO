@@ -45,7 +45,7 @@ class EditBookForm(forms.Form):
 class EditUserForm(forms.Form):
     name = CharField(label='Name', max_length=100)
     email = EmailField(label='E-mail', max_length=100)
-    
+
 
 user_choices = [
     (1, 'users followed by users I follow'),
@@ -56,7 +56,7 @@ book_choices = [
     (1, 'books rated by users I follow'),
     (2, 'books read by users who rated the same books I did'),
     (3, 'books with common tags to the previously rated books'),
-    (4, 'books with common tags to the previously rated books or wrote by the same authors (weighted)'),
+    (4, 'books with common tags to the previously rated books or written by the same authors (weighted)'),
 ]
 
 

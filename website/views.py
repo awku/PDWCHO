@@ -53,28 +53,35 @@ def dashboard_view(request):
             if selected == "1":
                 books_data = None
                 users_data = app.find_users_recommendations_foaf(user_id)
+                version = 'users followed by users I follow'
             elif selected == "2":
                 books_data = None
                 users_data = app.find_users_recommendations_similar_rating(user_id)
+                version = 'users who similarly rated the same books I did'
         if book_form.is_valid():
             selected = book_form.cleaned_data.get("books_options")
             if selected == "1":
                 users_data = None
                 books_data = app.find_books_recommendations_following(user_id)
+                version = 'books rated by users I follow'
             if selected == "2":
                 users_data = None
                 books_data = app.find_books_recommendations_user_also_read(user_id)
+                version = 'books read by users who rated the same books I did'
             if selected == "3":
                 users_data = None
                 books_data = app.find_books_recommendations_similar_tags(user_id)
+                version = 'books with common tags to the previously rated books'
             if selected == "4":
                 users_data = None
                 books_data = app.find_books_recommendations_similar_tags_author_weighted(user_id)
+                version = 'books with common tags to the previously rated books or written by the same authors (weighted)'
     else:
         user_form = RecommendUsersForm()
         book_form = RecommendBooksForm()
     return render(request, 'dashboard.html',
-                  {'user_form': user_form, 'book_form': book_form, 'users_data': users_data, 'books_data': books_data})
+                  {'user_form': user_form, 'book_form': book_form, 'users_data': users_data, 'books_data': books_data,
+                   'version': version})
 
 
 def register_view(request):

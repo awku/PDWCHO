@@ -32,6 +32,7 @@
         </div>
     </div>
     {% if books_data %}
+        {{ version }}
         <div class="list-group">
             {% for books in books_data %}
                 {% for book in books %}
