@@ -166,13 +166,15 @@ def book_view(request):
         is_rated = app.is_book_rated(user_id, isbn)
         if request.method == "POST":
             form_function = request.POST.get('_function', '').lower()
-            tag_form = TagBookForm(request.POST)
-            rate_form = RateBookForm(request.POST)
+            rate_form = RateBookForm()
+            tag_form = TagBookForm()
             if form_function == 'tagging':
+                tag_form = TagBookForm(request.POST)
                 if tag_form.is_valid():
                     tag = tag_form.cleaned_data.get('tag')
                     app.create_tag(isbn, tag)
             if form_function == 'rating':
+                rate_form = RateBookForm(request.POST)
                 if rate_form.is_valid():
                     rating = rate_form.cleaned_data.get('rating')
                     app.create_rating(user_id, isbn, rating)
