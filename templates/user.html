@@ -38,7 +38,6 @@
             </div>
         {% endif %}
     </div>
-    {{ can_follow }}
     {% if can_follow == 'not followed' %}
         <form method="post">
             {% csrf_token %}
